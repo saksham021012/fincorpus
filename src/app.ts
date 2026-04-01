@@ -3,6 +3,7 @@ import cors from 'cors';
 import { globalLimiter } from './middleware/rateLimiter';
 import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './modules/auth/auth.routes';
+import userRoutes from './modules/users/user.routes';
 
 const app = express();
 
@@ -18,6 +19,7 @@ app.get('/health', (_req, res) => {
 
 // Routes will be mounted here in subsequent steps
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // Global error handler — must be last
 app.use(errorHandler);
