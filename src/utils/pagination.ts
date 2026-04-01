@@ -1,11 +1,5 @@
 import { PaginationMeta } from './response';
 
-export interface PaginateResult {
-  skip: number;
-  take: number;
-  meta: Omit<PaginationMeta, 'total'>;
-}
-
 export function paginate(page: number, limit: number, total: number): {
   skip: number;
   take: number;
