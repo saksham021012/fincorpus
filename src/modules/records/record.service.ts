@@ -103,7 +103,8 @@ export async function updateRecord(id: string, input: UpdateRecordInput) {
     throw new AppError(404, 'Financial record not found.');
   }
 
-  // Build update data — only include fields that were provided
+  // exactOptionalPropertyTypes: true means Prisma's update types reject T | undefined.
+  // We must build the data object explicitly, only setting fields that were provided.
   const data: Prisma.FinancialRecordUpdateInput = {};
   if (input.amount !== undefined) data.amount = input.amount;
   if (input.type !== undefined) data.type = input.type;

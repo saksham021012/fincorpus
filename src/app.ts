@@ -5,6 +5,7 @@ import { errorHandler } from './middleware/errorHandler';
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/user.routes';
 import recordRoutes from './modules/records/record.routes';
+import dashboardRoutes from './modules/dashboard/dashboard.routes';
 
 const app = express();
 
@@ -18,10 +19,11 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Routes will be mounted here in subsequent steps
+// API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/records', recordRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Global error handler — must be last
 app.use(errorHandler);
