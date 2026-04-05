@@ -1,0 +1,282 @@
+{
+  "info": {
+    "name": "Financer API",
+    "_postman_id": "financer-api-collection",
+    "description": "Finance Dashboard Backend — complete API reference.\n\n**Setup:**\n1. Set the `baseUrl` collection variable to your server URL (default: http://localhost:3000)\n2. Run the **Login** request — the JWT token is captured automatically into the `token` variable.\n3. All protected requests use `{{token}}` from that variable.\n\n**Seed credentials:**\n- Admin: admin@financer.com / admin123\n- Analyst: analyst@financer.com / analyst123\n- Viewer: viewer@financer.com / viewer123",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string",
+      "description": "JWT token — set automatically when you run the Login request"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/register", "host": ["{{baseUrl}}"], "path": ["api", "auth", "register"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Test User\",\n  \"email\": \"test@example.com\",\n  \"password\": \"password123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.token) {",
+                  "  pm.collectionVariables.set('token', res.data.token);",
+                  "  console.log('Token captured successfully');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/login", "host": ["{{baseUrl}}"], "path": ["api", "auth", "login"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@financer.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "description": "Login with any seed user. The JWT token is automatically saved to the `token` collection variable."
+          },
+          "response": []
+        },
+        {
+          "name": "Get My Profile",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users",
+      "description": "Admin only",
+      "item": [
+        {
+          "name": "List All Users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/users", "host": ["{{baseUrl}}"], "path": ["api", "users"] }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Role",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/users/:id/role", "host": ["{{baseUrl}}"], "path": ["api", "users", ":id", "role"], "variable": [{ "key": "id", "value": "<user_id>" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"ANALYST\"\n}",
+              "description": "role: VIEWER | ANALYST | ADMIN"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User Status",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/users/:id/status", "host": ["{{baseUrl}}"], "path": ["api", "users", ":id", "status"], "variable": [{ "key": "id", "value": "<user_id>" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INACTIVE\"\n}",
+              "description": "status: ACTIVE | INACTIVE"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Records",
+      "item": [
+        {
+          "name": "List Records",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/records?page=1&limit=20&sortBy=date&sortOrder=desc",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "records"],
+              "query": [
+                { "key": "page", "value": "1", "description": "Page number (default: 1)" },
+                { "key": "limit", "value": "20", "description": "Items per page, max 100 (default: 20)" },
+                { "key": "sortBy", "value": "date", "description": "date | amount | createdAt" },
+                { "key": "sortOrder", "value": "desc", "description": "asc | desc" },
+                { "key": "type", "value": "INCOME", "description": "INCOME | EXPENSE", "disabled": true },
+                { "key": "category", "value": "Salary", "disabled": true },
+                { "key": "search", "value": "freelance", "disabled": true },
+                { "key": "startDate", "value": "2025-01-01", "disabled": true },
+                { "key": "endDate", "value": "2025-12-31", "disabled": true }
+              ]
+            },
+            "description": "All roles can access. Optional filters are disabled by default — enable them as needed in Postman."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/records/:id", "host": ["{{baseUrl}}"], "path": ["api", "records", ":id"], "variable": [{ "key": "id", "value": "<record_id>" }] }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Record",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/records", "host": ["{{baseUrl}}"], "path": ["api", "records"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5000,\n  \"type\": \"INCOME\",\n  \"category\": \"Salary\",\n  \"date\": \"2025-04-01\",\n  \"description\": \"Monthly salary for April\"\n}"
+            },
+            "description": "Admin only"
+          },
+          "response": []
+        },
+        {
+          "name": "Update Record",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{baseUrl}}/api/records/:id", "host": ["{{baseUrl}}"], "path": ["api", "records", ":id"], "variable": [{ "key": "id", "value": "<record_id>" }] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 5500,\n  \"description\": \"Updated salary amount\"\n}",
+              "description": "All fields are optional — only include fields you want to change."
+            },
+            "description": "Admin only. Send only the fields you want to change."
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Record (Soft)",
+          "request": {
+            "method": "DELETE",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/records/:id", "host": ["{{baseUrl}}"], "path": ["api", "records", ":id"], "variable": [{ "key": "id", "value": "<record_id>" }] },
+            "description": "Admin only. Sets deletedAt — record is not permanently removed from the database."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/summary", "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "summary"] },
+            "description": "All roles. Returns totalIncome, totalExpenses, netBalance, recordCount."
+          },
+          "response": []
+        },
+        {
+          "name": "Recent Activity",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/recent", "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "recent"] },
+            "description": "All roles. Returns last 10 non-deleted records ordered by date descending."
+          },
+          "response": []
+        },
+        {
+          "name": "Category Breakdown",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/categories", "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "categories"] },
+            "description": "Analyst and Admin only. Returns income and expense totals grouped by category."
+          },
+          "response": []
+        },
+        {
+          "name": "Monthly Trends",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/trends", "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "trends"] },
+            "description": "Analyst and Admin only. Returns monthly income, expenses, and net balance for the last 12 months."
+          },
+          "response": []
+        },
+        {
+          "name": "Weekly Trends",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{token}}" }],
+            "url": { "raw": "{{baseUrl}}/api/dashboard/trends/weekly", "host": ["{{baseUrl}}"], "path": ["api", "dashboard", "trends", "weekly"] },
+            "description": "Analyst and Admin only. Returns weekly income, expenses, and net balance for the last 12 weeks. Each entry has a 'week' field showing the ISO date of the Monday that starts that week."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Health Check",
+      "item": [
+        {
+          "name": "Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] },
+            "description": "Public. Returns { status: 'ok' } if the server is running."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
