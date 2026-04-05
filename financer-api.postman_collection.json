@@ -2,7 +2,7 @@
   "info": {
     "name": "Financer API",
     "_postman_id": "financer-api-collection",
-    "description": "Finance Dashboard Backend — complete API reference.\n\n**Setup:**\n1. Set the `baseUrl` collection variable to your server URL (default: http://localhost:3000)\n2. Run the **Login** request — the JWT token is captured automatically into the `token` variable.\n3. All protected requests use `{{token}}` from that variable.\n\n**Seed credentials:**\n- Admin: admin@financer.com / admin123\n- Analyst: analyst@financer.com / analyst123\n- Viewer: viewer@financer.com / viewer123",
+    "description": "Finance Dashboard Backend — complete API reference.\n\n**Setup:**\n1. Set the `baseUrl` collection variable to your server URL (default: http://localhost:3000)\n2. Run the **Login** request — the JWT `accessToken` is captured automatically into the `token` variable, and the `refreshToken` is set as an HTTP-only cookie automatically.\n3. All protected requests use `{{token}}` from that variable.\n\n*Note: Postman handles Set-Cookie automatically only when using its built-in cookie jar. This generally works out-of-the-box for localhost, but ensure the domain is not blocked.*\n\n**Seed credentials:**\n- Admin: admin@financer.com / admin123\n- Analyst: analyst@financer.com / analyst123\n- Viewer: viewer@financer.com / viewer123",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -15,7 +15,7 @@
       "key": "token",
       "value": "",
       "type": "string",
-      "description": "JWT token — set automatically when you run the Login request"
+      "description": "JWT access token — set automatically when you run the Login or Refresh request"
     }
   ],
   "item": [
@@ -43,9 +43,9 @@
               "script": {
                 "exec": [
                   "const res = pm.response.json();",
-                  "if (res.data && res.data.token) {",
-                  "  pm.collectionVariables.set('token', res.data.token);",
-                  "  console.log('Token captured successfully');",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('token', res.data.accessToken);",
+                  "  console.log('Access token captured successfully');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -60,7 +60,42 @@
               "mode": "raw",
               "raw": "{\n  \"email\": \"admin@financer.com\",\n  \"password\": \"admin123\"\n}"
             },
-            "description": "Login with any seed user. The JWT token is automatically saved to the `token` collection variable."
+            "description": "Login with any seed user. The 15-minute `accessToken` is saved to the `token` variable. The 7-day `refreshToken` is saved in the Postman cookie jar."
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const res = pm.response.json();",
+                  "if (res.data && res.data.accessToken) {",
+                  "  pm.collectionVariables.set('token', res.data.accessToken);",
+                  "  console.log('Access token refreshed and captured');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/refresh", "host": ["{{baseUrl}}"], "path": ["api", "auth", "refresh"] },
+            "description": "Reads the `refreshToken` HTTP-only cookie and issues a fresh 15-minute `accessToken`."
+          },
+          "response": []
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/api/auth/logout", "host": ["{{baseUrl}}"], "path": ["api", "auth", "logout"] },
+            "description": "Clears the `refreshToken` HTTP-only cookie."
           },
           "response": []
         },

@@ -26,7 +26,7 @@ export async function authenticate(
 
     let payload: JwtPayload;
     try {
-      payload = jwt.verify(token, env.JWT_SECRET) as JwtPayload;
+      payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtPayload;
     } catch {
       throw new AppError(401, 'Invalid or expired token.');
     }

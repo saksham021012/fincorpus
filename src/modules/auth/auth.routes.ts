@@ -21,6 +21,17 @@ router.post(
   authController.login,
 );
 
+router.post(
+  '/refresh',
+  authLimiter,
+  authController.refresh,
+);
+
+router.post(
+  '/logout',
+  authController.logout,
+);
+
 router.get('/me', authenticate, authController.me);
 
 export default router;

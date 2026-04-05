@@ -28,7 +28,7 @@ Copy `.env.example` to `.env` and fill in your Supabase connection strings:
 ```bash
 cp .env.example .env
 ```
-Ensure you have a 16+ character `JWT_SECRET`.
+Ensure you provide a 16+ character `JWT_ACCESS_SECRET` and `JWT_REFRESH_SECRET`!
 
 ### 3. Database Migrations & Seeding
 Push the schema to your database and generate the Prisma client:

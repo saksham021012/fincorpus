@@ -15,10 +15,16 @@ const USER_SELECT = {
   createdAt: true,
 } as const;
 
-function signToken(userId: string, role: Role): string {
-  return jwt.sign({ userId, role }, env.JWT_SECRET, {
+function generateTokens(userId: string, role: Role) {
+  const accessToken = jwt.sign({ userId, role }, env.JWT_ACCESS_SECRET, {
     expiresIn: env.JWT_EXPIRES_IN,
   } as jwt.SignOptions);
+
+  const refreshToken = jwt.sign({ userId }, env.JWT_REFRESH_SECRET, {
+    expiresIn: env.JWT_REFRESH_EXPIRES_IN,
+  } as jwt.SignOptions);
+
+  return { accessToken, refreshToken };
 }
 
 export async function register(input: RegisterInput) {
@@ -42,9 +48,9 @@ export async function register(input: RegisterInput) {
     select: USER_SELECT,
   });
 
-  const token = signToken(user.id, user.role);
+  const tokens = generateTokens(user.id, user.role);
 
-  return { token, user };
+  return { ...tokens, user };
 }
 
 export async function login(input: LoginInput) {
@@ -53,7 +59,6 @@ export async function login(input: LoginInput) {
     select: { ...USER_SELECT, passwordHash: true },
   });
 
-  // Use the same error for both "not found" and "wrong password" to prevent email enumeration
   const invalidCredentials = new AppError(401, 'Invalid email or password.');
 
   if (!user) throw invalidCredentials;
@@ -66,9 +71,35 @@ export async function login(input: LoginInput) {
   }
 
   const { passwordHash: _, ...userWithoutPassword } = user;
-  const token = signToken(user.id, user.role);
+  const tokens = generateTokens(user.id, user.role);
 
-  return { token, user: userWithoutPassword };
+  return { ...tokens, user: userWithoutPassword };
+}
+
+export async function refreshAccess(refreshToken: string) {
+  let payload: { userId: string };
+  try {
+    payload = jwt.verify(refreshToken, env.JWT_REFRESH_SECRET) as { userId: string };
+  } catch {
+    throw new AppError(401, 'Invalid or expired refresh token.');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, role: true, status: true },
+  });
+
+  if (!user) {
+    throw new AppError(401, 'User no longer exists.');
+  }
+
+  if (user.status === 'INACTIVE') {
+    throw new AppError(403, 'Your account has been deactivated.');
+  }
+
+  const tokens = generateTokens(user.id, user.role);
+
+  return tokens;
 }
 
 export async function getProfile(userId: string) {
