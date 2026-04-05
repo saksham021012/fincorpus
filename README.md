@@ -164,4 +164,3 @@ A complete **Postman Collection** is included in the root directory: `financer-a
 - **Stateful refresh token revocation.** Add a `hashedRefreshToken` column to the `User` model so Admins can force-logout any user. Currently a leaked refresh token remains valid until its 7-day expiry.
 - **OAuth support.** Add Google/GitHub login as an alternative to email/password.
 - **Audit logs.** Track who modified or soft-deleted a record via a separate `AuditLog` table. The `userId` on `FinancialRecord` already captures the creator.
-- **Cursor-based pagination.** Replace offset pagination on `GET /records` with cursor-based pagination for consistent performance on large datasets.
