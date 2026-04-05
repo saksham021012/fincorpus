@@ -111,9 +111,9 @@ export async function getMonthlyTrends() {
     }
     const entry = trendMap.get(key)!;
     if (row.type === 'INCOME') {
-      entry.income = row.total;
+      entry.income = row.total ?? 0;
     } else {
-      entry.expenses = row.total;
+      entry.expenses = row.total ?? 0;
     }
   }
 
