@@ -93,16 +93,6 @@ export async function getRecordById(id: string) {
 }
 
 export async function updateRecord(id: string, input: UpdateRecordInput) {
-  // Verify record exists and is not soft-deleted before updating
-  const exists = await prisma.financialRecord.findFirst({
-    where: { id, ...whereActive() },
-    select: { id: true },
-  });
-
-  if (!exists) {
-    throw new AppError(404, 'Financial record not found.');
-  }
-
   // exactOptionalPropertyTypes: true means Prisma's update types reject T | undefined.
   // We must build the data object explicitly, only setting fields that were provided.
   const data: Prisma.FinancialRecordUpdateInput = {};
@@ -112,35 +102,28 @@ export async function updateRecord(id: string, input: UpdateRecordInput) {
   if (input.date !== undefined) data.date = input.date;
   if (input.description !== undefined) data.description = input.description;
 
-  return await prisma.financialRecord.update({
-    where: { id },
-    data,
-    select: {
-      id: true,
-      amount: true,
-      type: true,
-      category: true,
-      date: true,
-      description: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-}
-
-export async function softDeleteRecord(id: string) {
-  // Prisma will throw P2025 (→ 404 via errorHandler) if not found or already deleted
-  const record = await prisma.financialRecord.findFirst({
+  // Use updateMany for atomicity since it allows us to filter by deletedAt: null (unlike update)
+  const result = await prisma.financialRecord.updateMany({
     where: { id, ...whereActive() },
-    select: { id: true },
+    data,
   });
 
-  if (!record) {
+  if (result.count === 0) {
     throw new AppError(404, 'Financial record not found.');
   }
 
-  await prisma.financialRecord.update({
-    where: { id },
+  // Fetch the updated record to return it
+  return await getRecordById(id);
+}
+
+export async function softDeleteRecord(id: string) {
+  // Atomic soft delete preventing TOCTOU races
+  const result = await prisma.financialRecord.updateMany({
+    where: { id, ...whereActive() },
     data: { deletedAt: new Date() },
   });
+
+  if (result.count === 0) {
+    throw new AppError(404, 'Financial record not found.');
+  }
 }
