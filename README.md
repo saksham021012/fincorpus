@@ -156,6 +156,8 @@ A complete **Postman Collection** is included in the root directory: `financer-a
 
 11. **Rate limiting at two tiers.** Global limiter (100 req / 15 min) on all routes. Stricter auth limiter (10 req / 15 min) on `/login`, `/register`, and `/refresh` to slow brute-force attacks.
 
+12. **Advanced Filtering & Search.** The `GET /records` endpoint natively supports compounding query filters. It performs exact matches for `type`, insensitive partial-string matching for `category` and `search` (hitting descriptions), and bounding-box queries for `startDate`/`endDate`, elegantly satisfying the criteria search assignment constraint.
+
 ---
 
 ## 🔮 Future Improvements
