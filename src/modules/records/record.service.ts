@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../../config/database';
+import { invalidateDashboardCache } from '../../config/redis';
 import { AppError } from '../../utils/AppError';
 import { paginate } from '../../utils/pagination';
 import {
@@ -12,7 +13,7 @@ import {
 const whereActive = (): { deletedAt: null } => ({ deletedAt: null });
 
 export async function createRecord(userId: string, input: CreateRecordInput) {
-  return await prisma.financialRecord.create({
+  const record = await prisma.financialRecord.create({
     data: {
       userId,
       amount: input.amount,
@@ -22,6 +23,8 @@ export async function createRecord(userId: string, input: CreateRecordInput) {
       description: input.description,
     },
   });
+  await invalidateDashboardCache();
+  return record;
 }
 
 export async function listRecords(query: ListQueryInput) {
@@ -112,6 +115,8 @@ export async function updateRecord(id: string, input: UpdateRecordInput) {
     throw new AppError(404, 'Financial record not found.');
   }
 
+  await invalidateDashboardCache();
+
   // Fetch the updated record to return it
   return await getRecordById(id);
 }
@@ -126,4 +131,5 @@ export async function softDeleteRecord(id: string) {
   if (result.count === 0) {
     throw new AppError(404, 'Financial record not found.');
   }
+  await invalidateDashboardCache();
 }

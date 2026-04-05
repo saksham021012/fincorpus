@@ -31,6 +31,7 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z
     .string()
     .default('7d'),
+  REDIS_URL: z.string().optional(),
 });
 
 const parsed = envSchema.safeParse(process.env);
