@@ -18,9 +18,9 @@ export async function getSummary() {
     }),
   ]);
 
-  const totalIncome = incomeResult._sum.amount ?? 0;
-  const totalExpenses = expenseResult._sum.amount ?? 0;
-  const netBalance = totalIncome - totalExpenses;
+  const totalIncome = Number((incomeResult._sum.amount ?? 0).toFixed(2));
+  const totalExpenses = Number((expenseResult._sum.amount ?? 0).toFixed(2));
+  const netBalance = Number((totalIncome - totalExpenses).toFixed(2));
 
   return {
     totalIncome,
@@ -68,11 +68,11 @@ export async function getCategoryBreakdown() {
   return {
     income: incomeByCategory.map((r) => ({
       category: r.category,
-      total: r._sum.amount ?? 0,
+      total: Number((r._sum.amount ?? 0).toFixed(2)),
     })),
     expenses: expenseByCategory.map((r) => ({
       category: r.category,
-      total: r._sum.amount ?? 0,
+      total: Number((r._sum.amount ?? 0).toFixed(2)),
     })),
   };
 }
@@ -120,9 +120,59 @@ export async function getMonthlyTrends() {
   const trends: MonthlyTrend[] = Array.from(trendMap.entries()).map(
     ([month, data]) => ({
       month,
-      income: data.income,
-      expenses: data.expenses,
-      net: data.income - data.expenses,
+      income: Number(data.income.toFixed(2)),
+      expenses: Number(data.expenses.toFixed(2)),
+      net: Number((data.income - data.expenses).toFixed(2)),
+    }),
+  );
+
+  return trends;
+}
+
+interface WeeklyTrend {
+  week: string;  // ISO date of the Monday that starts the week, e.g. "2025-03-31"
+  income: number;
+  expenses: number;
+  net: number;
+}
+
+export async function getWeeklyTrends() {
+  const rows = await prisma.$queryRaw<
+    Array<{ week: Date; type: string; total: number }>
+  >`
+    SELECT
+      date_trunc('week', date) AS week,
+      type,
+      SUM(amount)::float AS total
+    FROM "FinancialRecord"
+    WHERE
+      "deletedAt" IS NULL
+      AND date >= date_trunc('week', NOW() - INTERVAL '11 weeks')
+    GROUP BY week, type
+    ORDER BY week ASC
+  `;
+
+  const trendMap = new Map<string, { income: number; expenses: number }>();
+
+  for (const row of rows) {
+    const key = new Date(row.week).toISOString().slice(0, 10); // e.g. "2025-03-31"
+    if (!trendMap.has(key)) {
+      trendMap.set(key, { income: 0, expenses: 0 });
+    }
+    const entry = trendMap.get(key)!;
+    if (row.type === 'INCOME') {
+      entry.income = row.total ?? 0;
+    } else {
+      entry.expenses = row.total ?? 0;
+    }
+  }
+
+  const trends: WeeklyTrend[] = Array.from(trendMap.entries()).map(
+    ([week, data]) => ({
+      week,
+      income: Number(data.income.toFixed(2)),
+      expenses: Number(data.expenses.toFixed(2)),
+      net: Number((data.income - data.expenses).toFixed(2)),
     }),
   );
 

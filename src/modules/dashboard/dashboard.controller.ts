@@ -53,3 +53,16 @@ export async function monthlyTrends(
     next(err);
   }
 }
+
+export async function weeklyTrends(
+  _req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  try {
+    const data = await dashboardService.getWeeklyTrends();
+    success(res, data);
+  } catch (err) {
+    next(err);
+  }
+}

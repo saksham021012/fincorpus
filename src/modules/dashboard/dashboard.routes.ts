@@ -25,4 +25,10 @@ router.get(
   dashboardController.monthlyTrends,
 );
 
+router.get(
+  '/trends/weekly',
+  requireRole('ANALYST', 'ADMIN'),
+  dashboardController.weeklyTrends,
+);
+
 export default router;
