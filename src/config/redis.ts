@@ -8,6 +8,7 @@ if (env.REDIS_URL) {
     lazyConnect: true,
     maxRetriesPerRequest: 1,
     tls: env.REDIS_URL.startsWith('rediss://') ? {} : undefined,
+    family: 4,
   });
 
   redis.on('error', (err) => {
