@@ -11,6 +11,8 @@ import dashboardRoutes from './modules/dashboard/dashboard.routes';
 const app = express();
 
 // Global middleware
+// NOTE: credentials and origin must be configured for production cross-origin
+
 app.use(cors());
 app.use(cookieParser());
 app.use(express.json());
